@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Canvas频谱测试</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #333; color: white; }
+        canvas { border: 1px solid #666; border-radius: 8px; display: block; margin: 20px auto; }
+        .controls { text-align: center; margin: 20px; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { opacity: 0.8; }
+        .start { background: #28a745; color: white; }
+        .stop { background: #dc3545; color: white; }
+        .status { text-align: center; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Canvas频谱可视化测试</h1>
+    
+    <div class="controls">
+        <button class="start" onclick="testCanvas()">测试Canvas绘制</button>
+        <button class="stop" onclick="clearCanvas()">清除画布</button>
+    </div>
+    
+    <canvas id="testCanvas" width="800" height="350"></canvas>
+    
+    <div class="status" id="status">点击按钮开始测试</div>
+    
+    <script>
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 350;
+        const PADDING = 40;
+        const PLOT_WIDTH = CANVAS_WIDTH - 2 * PADDING;
+        const PLOT_HEIGHT = CANVAS_HEIGHT - 2 * PADDING;
+        const MAX_FREQ_KHZ = 100;
+        const MIN_DB = -100;
+        const MAX_DB = 0;
+        
+        function drawBackground() {
+            // 清空画布
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            
+            // 绘制网格
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            
+            // 垂直网格线
+            for (let i = 0; i <= 10; i++) {
+                const x = PADDING + (i / 10) * PLOT_WIDTH;
+                ctx.beginPath();
+                ctx.moveTo(x, PADDING);
+                ctx.lineTo(x, PADDING + PLOT_HEIGHT);
+                ctx.stroke();
+            }
+            
+            // 水平网格线
+            for (let i = 0; i <= 10; i++) {
+                const y = PADDING + (i / 10) * PLOT_HEIGHT;
+                ctx.beginPath();
+                ctx.moveTo(PADDING, y);
+                ctx.lineTo(PADDING + PLOT_WIDTH, y);
+                ctx.stroke();
+            }
+            
+            // 标签
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            // X轴标签
+            for (let i = 0; i <= 10; i++) {
+                const x = PADDING + (i / 10) * PLOT_WIDTH;
+                const freq = (i / 10) * MAX_FREQ_KHZ;
+                ctx.fillText(freq.toFixed(0) + 'k', x, CANVAS_HEIGHT - 10);
+            }
+            
+            // Y轴标签
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 10; i++) {
+                const y = PADDING + (i / 10) * PLOT_HEIGHT;
+                const db = MAX_DB - (i / 10) * (MAX_DB - MIN_DB);
+                ctx.fillText(db.toFixed(0) + 'dB', PADDING - 10, y + 4);
+            }
+        }
+        
+        function generateTestData() {
+            const data = [];
+            const length = 2049; // 模拟FFT输出长度
+            
+            for (let i = 0; i < length; i++) {
+                const freq = (i / length) * 100; // kHz
+                
+                // 生成测试频谱：几个峰值
+                let amplitude = -80; // 基础噪声
+                
+                // 10kHz峰值
+                if (freq > 9 && freq < 11) {
+                    amplitude = -20 - Math.abs(freq - 10) * 10;
+                }
+                
+                // 25kHz峰值
+                if (freq > 23 && freq < 27) {
+                    amplitude = -30 - Math.abs(freq - 25) * 5;
+                }
+                
+                // 45kHz峰值
+                if (freq > 43 && freq < 47) {
+                    amplitude = -25 - Math.abs(freq - 45) * 8;
+                }
+                
+                // 添加随机噪声
+                amplitude += (Math.random() - 0.5) * 10;
+                
+                data.push(Math.max(amplitude, -100));
+            }
+            
+            return data;
+        }
+        
+        function drawSpectrum(fftData) {
+            drawBackground();
+            
+            const freqStep = MAX_FREQ_KHZ / fftData.length;
+            const maxFreqIndex = Math.min(fftData.length, Math.floor(MAX_FREQ_KHZ / freqStep));
+            
+            // 绘制频谱线
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            let firstPoint = true;
+            for (let i = 0; i < maxFreqIndex; i++) {
+                const freq = i * freqStep;
+                const db = fftData[i];
+                
+                const x = PADDING + (freq / MAX_FREQ_KHZ) * PLOT_WIDTH;
+                // 修复Y轴坐标计算 - 确保高dB值显示在顶部，低dB值显示在底部
+                const normalizedDb = (db - MIN_DB) / (MAX_DB - MIN_DB); // 0-1范围
+                const y = PADDING + (1 - normalizedDb) * PLOT_HEIGHT;
+                
+                if (firstPoint) {
+                    ctx.moveTo(x, y);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 绘制填充
+            ctx.fillStyle = 'rgba(0, 255, 136, 0.1)';
+            ctx.beginPath();
+            ctx.moveTo(PADDING, PADDING + PLOT_HEIGHT);
+            
+            for (let i = 0; i < maxFreqIndex; i++) {
+                const freq = i * freqStep;
+                const db = fftData[i];
+                const x = PADDING + (freq / MAX_FREQ_KHZ) * PLOT_WIDTH;
+                // 修复Y轴坐标计算 - 确保高dB值显示在顶部，低dB值显示在底部
+                const normalizedDb = (db - MIN_DB) / (MAX_DB - MIN_DB); // 0-1范围
+                const y = PADDING + (1 - normalizedDb) * PLOT_HEIGHT;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(PADDING + PLOT_WIDTH, PADDING + PLOT_HEIGHT);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 峰值标记
+            const peakIndex = fftData.indexOf(Math.max(...fftData));
+            if (peakIndex > 0) {
+                const peakFreq = peakIndex * freqStep;
+                const peakDb = fftData[peakIndex];
+                const peakX = PADDING + (peakFreq / MAX_FREQ_KHZ) * PLOT_WIDTH;
+                // 修复峰值Y轴坐标计算
+                const normalizedPeakDb = (peakDb - MIN_DB) / (MAX_DB - MIN_DB);
+                const peakY = PADDING + (1 - normalizedPeakDb) * PLOT_HEIGHT;
+                
+                ctx.fillStyle = '#ff4444';
+                ctx.beginPath();
+                ctx.arc(peakX, peakY, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${peakFreq.toFixed(1)}kHz`, peakX, peakY - 10);
+            }
+        }
+        
+        function testCanvas() {
+            document.getElementById('status').textContent = '正在绘制测试频谱...';
+            
+            const testData = generateTestData();
+            drawSpectrum(testData);
+            
+            document.getElementById('status').textContent = '✅ Canvas绘制测试完成！显示了10kHz、25kHz、45kHz三个测试峰值';
+        }
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            drawBackground();
+            document.getElementById('status').textContent = '画布已清除';
+        }
+        
+        // 初始化
+        drawBackground();
+    </script>
+</body>
+</html>

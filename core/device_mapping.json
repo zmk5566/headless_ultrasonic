@@ -1,0 +1,14 @@
+{
+  "device_mapping": {
+    "macbookairmicrop_fd9a78": "sig_dc37b6fd9a78",
+    "microsoftteamsau_efeaf3": "sig_8bcb6fefeaf3",
+    "ultramic384k16bi_ac95d9": "sig_04c0d5ac95d9"
+  },
+  "reverse_mapping": {
+    "sig_dc37b6fd9a78": "macbookairmicrop_fd9a78",
+    "sig_8bcb6fefeaf3": "microsoftteamsau_efeaf3",
+    "sig_04c0d5ac95d9": "ultramic384k16bi_ac95d9"
+  },
+  "version": "1.0",
+  "description": "Audio device stable ID mapping for headless_ultrasonic"
+}

@@ -1,0 +1,35 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8380,
+    "debug": false
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  },
+  "data": {
+    "data_dir": "./data"
+  },
+  "stream": {
+    "target_fps": 30,
+    "compression_level": 6,
+    "enable_adaptive_fps": true,
+    "min_fps": 5,
+    "max_fps": 60,
+    "magnitude_threshold_db": -80.0,
+    "enable_smart_skip": false,
+    "similarity_threshold": 0.95
+  },
+  "audio": {
+    "device_names": ["UltraMic384K", "UltraMic", "384K"],
+    "fallback_device_id": null,
+    "sample_rate": 384000,
+    "channels": 1,
+    "blocksize": 3840,
+    "fft_size": 8192,
+    "overlap": 0.75,
+    "window_type": "hann",
+    "threshold_db": -100.0
+  }
+}

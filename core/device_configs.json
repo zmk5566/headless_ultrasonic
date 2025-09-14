@@ -1,0 +1,28 @@
+{
+  "device_configs": {
+    "macbookairmicrop_fd9a78": {
+      "device_name": "MacBook Air Microphone",
+      "sample_rate": 44100,
+      "blocksize": 1024,
+      "fft_size": 2048,
+      "channels": 1,
+      "last_updated": "2025-09-11T18:30:00Z"
+    },
+    "microsoftteamsau_efeaf3": {
+      "device_name": "Microsoft Teams Audio",
+      "sample_rate": 48000,
+      "blocksize": 2048,
+      "fft_size": 4096,
+      "channels": 2,
+      "last_updated": "2025-09-11T18:30:00Z"
+    }
+  },
+  "defaults": {
+    "sample_rate": 44100,
+    "blocksize": 1024,
+    "fft_size": 2048,
+    "channels": 1
+  },
+  "version": "1.0",
+  "description": "Device-specific optimal configurations for headless_ultrasonic"
+}
